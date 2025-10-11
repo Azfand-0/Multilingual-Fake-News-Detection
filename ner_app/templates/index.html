@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Multilingual Fake News Detection System</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      color: #333;
+    }
+    h1 { color: #004080; margin-bottom: 10px; text-align: center; }
+    textarea, input {
+      width: 100%;
+      max-width: 600px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
+      resize: vertical;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    button {
+      margin-top: 10px;
+      background-color: #004080;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 3px 6px rgba(0,64,128,0.5);
+      transition: background-color 0.3s ease;
+    }
+    button:hover { background-color: #0066cc; }
+    #entitiesContainer, #sentimentContainer, #similarityContainer {
+      margin-top: 25px;
+      max-width: 600px;
+      width: 100%;
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      min-height: 60px;
+    }
+    .entity { display: inline-block; margin: 4px 8px 4px 0; padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 0.9rem; color: white; user-select: none; }
+    .ORG { background-color: #007bff; }
+    .LOC { background-color: #28a745; }
+    .PER { background-color: #dc3545; }
+    .MISC { background-color: #6f42c1; }
+    .DATE { background-color: #fd7e14; }
+    .TIME { background-color: #20c997; }
+    .GPE { background-color: #17a2b8; }
+    #error { margin-top: 20px; color: #dc3545; font-weight: 600; }
+    .btn-group { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <h1>Multilingual Fake News Detection System</h1>
+  
+  <label for="inputText"><strong>Enter your text/article below:</strong></label>
+  <textarea id="inputText" placeholder="Paste text here..."></textarea>
+  
+  <div class="btn-group">
+    <button id="nerBtn">Extract Entities</button>
+    <button id="sentimentBtn">Analyze Sentiment</button>
+    <button id="similarityBtn">Check Similarity</button>
+    <button id="downloadBtn" style="display: none;">Download Entities</button>
+  </div>
+
+  <div id="entitiesContainer"></div>
+  <div id="sentimentContainer"></div>
+  <div id="similarityContainer"></div>
+  <div id="error"></div>
+
+  <script>
+    let extractedEntities = [];
+
+    // NER
+    document.getElementById('nerBtn').addEventListener('click', async () => {
+      const input = document.getElementById('inputText').value.trim();
+      const container = document.getElementById('entitiesContainer');
+      const errorDiv = document.getElementById('error');
+      const downloadBtn = document.getElementById('downloadBtn');
+      
+      container.innerHTML = '';
+      errorDiv.innerText = '';
+      extractedEntities = [];
+
+      if (!input) {
+        errorDiv.innerText = 'Please enter some text!';
+        return;
+      }
+
+      try {
+        const response = await fetch('/ner/', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ text: input })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          errorDiv.innerText = data.error || 'An error occurred.';
+          return;
+        }
+
+        if (data.entities && Array.isArray(data.entities) && data.entities.length > 0) {
+          data.entities.forEach(ent => {
+            const div = document.createElement('div');
+            div.className = `entity ${ent.label}`;
+            const safeText = ent.text ? ent.text.replace(/</g, "&lt;").replace(/>/g, "&gt;") : '(no text)';
+            div.innerText = `${safeText} (${ent.label})`;
+            container.appendChild(div);
+            extractedEntities.push(`${safeText} (${ent.label})`);
+          });
+          downloadBtn.style.display = 'inline-block';
+        } else {
+          container.innerHTML = '<p>No named entities found.</p>';
+          downloadBtn.style.display = 'none';
+        }
+      } catch (err) {
+        errorDiv.innerText = 'Failed to fetch NER results.';
+        console.error(err);
+      }
+    });
+
+    // Sentiment
+    document.getElementById('sentimentBtn').addEventListener('click', async () => {
+      const input = document.getElementById('inputText').value.trim();
+      const container = document.getElementById('sentimentContainer');
+      const errorDiv = document.getElementById('error');
+
+      container.innerHTML = '';
+      errorDiv.innerText = '';
+
+      if (!input) {
+        errorDiv.innerText = 'Please enter some text!';
+        return;
+      }
+
+      try {
+        const response = await fetch('/sentiment/', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ text: input })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          errorDiv.innerText = data.error || 'An error occurred.';
+          return;
+        }
+
+        if (Array.isArray(data) && data.length > 0) {
+          const result = data[0];
+          container.innerHTML = `<p><strong>Sentiment:</strong> ${result.label} (Score: ${result.score.toFixed(3)})</p>`;
+        } else {
+          container.innerHTML = `<p>No sentiment result found.</p>`;
+        }
+      } catch (err) {
+        errorDiv.innerText = 'Failed to fetch sentiment results.';
+        console.error(err);
+      }
+    });
+
+    // Similarity
+    document.getElementById('similarityBtn').addEventListener('click', async () => {
+      const text1 = document.getElementById('inputText').value.trim();
+      const text2 = prompt("Enter another sentence/article to compare:");
+
+      const container = document.getElementById('similarityContainer');
+      const errorDiv = document.getElementById('error');
+
+      container.innerHTML = '';
+      errorDiv.innerText = '';
+
+      if (!text1 || !text2) {
+        errorDiv.innerText = 'Please provide both texts!';
+        return;
+      }
+
+      try {
+        const response = await fetch('/similarity/', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ text1, text2 })
+        });
+
+        const data = await response.json();
+        if (!response.ok) {
+          errorDiv.innerText = data.error || 'An error occurred.';
+          return;
+        }
+
+       container.innerHTML = `<p><strong>Similarity:</strong> ${data.label} (${(data.score * 100).toFixed(1)}%)</p>`;
+
+      } catch (err) {
+        errorDiv.innerText = 'Failed to fetch similarity results.';
+        console.error(err);
+      }
+    });
+
+    // Download entities
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      const blob = new Blob([extractedEntities.join('\n')], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'entities.txt';
+      link.click();
+      URL.revokeObjectURL(url);
+    });
+  </script>
+</body>
+</html>
