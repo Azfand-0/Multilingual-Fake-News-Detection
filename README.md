@@ -18,7 +18,7 @@
     </td>
   </tr>
 </table>
----------------------------------------------------Examples---------------------------------------------------
+
 <img width="1363" height="653" alt="Screenshot from 2025-12-02 20-17-45" src="https://github.com/user-attachments/assets/14a5f2a3-3115-4c66-8272-dee7cd4ff73e" />
 <img width="1363" height="593" alt="Screenshot from 2026-03-24 14-15-02" src="https://github.com/user-attachments/assets/8ce9d8f7-f7d9-4674-88a5-a34b88da5444" />
 <img width="1363" height="612" alt="Screenshot from 2026-03-24 14-18-06" src="https://github.com/user-attachments/assets/d526e921-4d63-46e2-adde-9a38beda21b5" />
