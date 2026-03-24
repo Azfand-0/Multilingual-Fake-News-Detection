@@ -1,5 +1,4 @@
 # Multilingual-Fake-News-Detection
-![A](https://github.com/user-attachments/assets/48961f86-9e2d-4416-a860-f69e49bbe375)
 <table width="100%">
   <table width="100%">
   <tr>
@@ -18,6 +17,9 @@
     </td>
   </tr>
 </table>
+  
+![A](https://github.com/user-attachments/assets/48961f86-9e2d-4416-a860-f69e49bbe375)
+
 
 <img width="1363" height="653" alt="Screenshot from 2025-12-02 20-17-45" src="https://github.com/user-attachments/assets/14a5f2a3-3115-4c66-8272-dee7cd4ff73e" />
 <img width="1363" height="593" alt="Screenshot from 2026-03-24 14-15-02" src="https://github.com/user-attachments/assets/8ce9d8f7-f7d9-4674-88a5-a34b88da5444" />
